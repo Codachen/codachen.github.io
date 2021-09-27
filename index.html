@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>嗨！瞻新資訊</title>
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+      integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh"
+      crossorigin="anonymous"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14"></script>
+  </head>
+  <body ontouchstart>
+    <div id="app">
+      <h1>Vue.js Todo List</h1>
+      <div class="input-group mb-3">
+        <div class="input-group-prepend">
+          <span class="input-group-text">代辦事項</span>
+        </div>
+        <input
+          type="text"
+          class="form-control"
+          placeholder="準備要做的事"
+          v-model="newTodo"
+          @keyup.enter="addTodo"
+        />
+        <div class="input-group-append">
+          <button class="btn btn-primary" type="button" @click="addTodo">
+            新增
+          </button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <ul class="nav nav-tabs card-header-tabs">
+            <li class="nav-item">
+              <a
+                class="nav-link"
+                :class="{ 'active' : visibility === 'all' }"
+                @click="visibility = 'all'"
+                href="#"
+                >全部</a
+              >
+            </li>
+            <li class="nav-item">
+              <a
+                class="nav-link"
+                :class="{ 'active' : visibility === 'processing' }"
+                @click="visibility = 'processing'"
+                href="#"
+                >進行中</a
+              >
+            </li>
+            <li class="nav-item">
+              <a
+                class="nav-link"
+                :class="{ 'active' : visibility === 'completed' }"
+                @click="visibility = 'completed'"
+                href="#"
+                >已完成</a
+              >
+            </li>
+          </ul>
+        </div>
+        <ul class="list-group list-group-flush text-left">
+          <li
+            class="list-group-item"
+            v-for="(item, key) in filterTodos"
+            @dblclick="editTodo(item)"
+          >
+            <div class="d-flex" v-if="item.id !== cacheTodo.id">
+              <div class="form-check">
+                <input
+                  type="checkbox"
+                  class="form-check-input"
+                  v-model="item.completed"
+                  :id="item.id"
+                />
+                <label
+                  class="form-check-label"
+                  :class="{ 'completed' : item.completed }"
+                  :for="item.id"
+                >
+                  {{ item.title }}
+                </label>
+              </div>
+              <button
+                type="button"
+                class="close ml-auto"
+                aria-label="Close"
+                @click="removeTodo(item)"
+              >
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <input
+              type="text"
+              class="form-control"
+              v-if="item.id === cacheTodo.id"
+              v-model="cacheTitle"
+              @keyup.esc="cancelEdit"
+              @keyup.enter="doneEdit(item)"
+            />
+          </li>
+          <!-- <li class="list-group-item">
+            <input type="text" class="form-control" />
+          </li> -->
+        </ul>
+        <div class="card-footer d-flex justify-content-between">
+          <span>還有 {{ filterUncompleted }} 筆任務未完成</span>
+          <a href="#" @click.prevent="clearAllTask">清除所有任務</a>
+        </div>
+      </div>
+      <br/>
+      <div>
+        <center>
+        <button class="btn btn-success" type="button" @click="clearAll">
+          清除localStorage
+        </button>
+      </center>
+      </div>
+    </div>
+
+    <script
+      src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
+      integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+      integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
+      integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
+      crossorigin="anonymous"
+    ></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+    <script type="text/javascript">
+    var app = new Vue({
+  el: '#app',
+  data: {
+    newTodo: '',
+    todos: JSON.parse(localStorage.getItem('listData')) || [
+      {
+        id: "Math.floor(Date.now())",
+        title: "投遞履歷",
+        completed: false,
+      },
+      {
+        id: "Math.floor(Date.now())",
+        title: "順利面試",
+        completed: false,
+      },
+      {
+        id: "Math.floor(Date.now())",
+        title: "錄取上班",
+        completed: false,
+      }],
+    visibility: 'all',
+    cacheTodo: {},
+    cacheTitle: '',
+  },
+  methods: {
+    addTodo() {
+      let value = this.newTodo.trim();
+      let timestamp = Math.floor(Date.now());
+      if (!value) return;
+      this.todos.push({
+        id: timestamp,
+        title: value,
+        completed: false,
+      });
+      localStorage.setItem('listData', JSON.stringify(this.todos));
+      this.newTodo = '';
+    },
+    removeTodo(item) {
+      // let newIndex = '';
+      // this.todos.forEach((e, i) => {
+      //   if (item.id === e.id) newIndex = i;
+      // });
+      let newIndex = this.todos.findIndex(e => item.id === e.id);
+      this.todos.splice(newIndex, 1);
+      localStorage.setItem('listData', JSON.stringify(this.todos));
+    },
+    editTodo(item) {
+      this.cacheTodo = item;
+      this.cacheTitle = item.title;
+    },
+    cancelEdit() {
+      this.cacheTodo = {};
+    },
+    doneEdit(item) {
+      item.title = this.cacheTitle;
+      this.cacheTitle = '';
+      this.cacheTodo = {};
+    },
+    clearAllTask() {
+      this.todos = [];
+      localStorage.setItem('listData', JSON.stringify(this.todos));
+    },
+    clearAll(){
+      localStorage.clear();
+    }
+  },
+  computed: {
+    filterTodos() {
+      if (this.visibility === 'all') {
+        return this.todos;
+      } else if (this.visibility === 'processing') {
+        // let newTodos = [];
+        // this.todos.forEach(item => {
+        //   if (!item.completed) newTodos.push(item);
+        // });
+        // return newTodos;
+        let newTodos = this.todos.filter(item => item.completed === false);
+        return newTodos;
+      } else if (this.visibility === 'completed') {
+        // let newTodos = [];
+        // this.todos.forEach(item => {
+        //   if (item.completed) newTodos.push(item);
+        // });
+        // return newTodos;
+        let newTodos = this.todos.filter(item => item.completed === true);
+        return newTodos;
+      }
+    },
+    filterUncompleted() {
+      let newTodos = this.todos.filter(item => item.completed === false);
+      return newTodos.length;
+    }
+  },
+});
+    </script>
+  </body>
+</html>
